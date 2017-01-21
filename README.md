@@ -7,7 +7,7 @@ praan is a Functor for reactive programming. if you like functional programming,
 you can associate a stream with an array that expose it's element at the right time. for example, a stream of [1,2,3,4] is an array expose 1,2,3,4 immediately. and a stream of user input is an array that expose a data when user input a value.
 
 you can observe a stream `stream.observe(fn)`, and `fn` will be call every time there is a value in the stream to be exposed.
-##Install
+## Install
 ```shell
 npm install praan
 ```
@@ -20,7 +20,7 @@ import praan from 'praan';
 var praan = require('praan');
 ```
 
-##example
+## example
 
 ```javascript
 var stream = praan.of([1,2,3,4]);
