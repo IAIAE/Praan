@@ -1,5 +1,5 @@
 function Stream(source){
-    this.__value = source;
+    this.source = source;
 };
 Stream.of = function(source){
     return new Stream(source);

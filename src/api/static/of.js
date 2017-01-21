@@ -1,6 +1,6 @@
-import Stream from '../../functor/Stream.js'
-import Just from '../../functor/Just.js'
+import Stream from '../../Functor/Stream.js'
+import Just from '../../Functor/Just.js'
 
-export function of(data){
+export default function of(data){
     return Stream.of(Just.of(data));
 }

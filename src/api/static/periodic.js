@@ -1,5 +1,5 @@
-import Stream from '../../functor/Stream.js'
-import Periodic from '../../functor/Periodic.js'
+import Stream from '../../Functor/Stream.js'
+import Periodic from '../../Functor/Headspring/Periodic.js'
 
 function periodic(duration, value){
     return Stream.of(Periodic.of(duration, value))

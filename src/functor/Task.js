@@ -11,9 +11,8 @@ method(Task, 'run', function (){
 .method('err', function (err){
     throw err;
 })
-.method('stop', function(){
+.method('dispose', function(){
     this.active = false;
-    return this;
 });
 
 export default Task;

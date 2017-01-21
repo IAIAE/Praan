@@ -1,4 +1,8 @@
-import Stream from './functor/Stream.js';
-import {periodic} from './functor/Periodic.js'
+import Stream from './Functor/Stream.js';
+import periodic from './api/static/periodic'
+import of from './api/static/of'
 
-export {periodic}  
+export default {
+    of,
+    periodic
+}
