@@ -1,8 +1,12 @@
-import {method} from '../util.js'
+import {method} from '../../util.js'
 
 function Task(fn){
     this.__value = fn;
     this.active = true;
+}
+
+Task.of = function(fn){
+    return new Task(fn);
 }
 
 method(Task, 'run', function (){

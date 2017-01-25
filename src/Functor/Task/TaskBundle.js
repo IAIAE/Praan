@@ -1,4 +1,4 @@
-import {method} from '../util.js'
+import {method} from '../../util.js'
 import Task from './Task.js'
 
 

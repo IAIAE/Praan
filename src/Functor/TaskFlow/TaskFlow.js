@@ -1,9 +1,13 @@
-import { method } from '../util.js'
-import Task from './Task.js'
-import TaskBundle from './TaskBundle.js'
+import { method } from '../../util.js'
+import Task from '../Task/Task.js'
+import TaskBundle from '../Task/TaskBundle.js'
 
 function TaskFlow() {
     this.queue = [];
+}
+
+TaskFlow.of = function(){
+    return new TaskFlow();
 }
 
 method(TaskFlow, 'insert', function (timeTask) {

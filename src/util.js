@@ -9,4 +9,13 @@ function method(Constructor, name, fn){
     return f.method(name, fn);
 }
 
-export {method}
+function sMethod(source, dist){
+    for(let key in dist){
+        if(dist.hasOwnProperty(key)){
+            source[key] = dist[key];
+        }
+    }
+}
+
+
+export {method, sMethod}

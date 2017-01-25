@@ -1,10 +1,15 @@
-import {method} from '../util.js'
+import {method} from '../../util.js'
 
 
 function Schedular(clockTimer, taskFlow){
     this.clockTimer = clockTimer;
     this.taskFlow = taskFlow;
 }
+
+Schedular.of = function(timer, flow){
+    return new Schedular(timer, flow);
+}
+
 var warp = function(task, time, periodic){
     task.time = time;
     task.periodic = periodic;
@@ -13,13 +18,16 @@ method(Schedular, 'atonce', function(task){
     var now = this.now();
     this.schedule(0, -1, now, task);
 })
+
 .method('now', function(){
     return this.clockTimer.now();
 })
+
 .method('schedule', function(delay, periodic, callTime, task){
     this.taskFlow.add(task.time === undefined ? warp(task, callTime + delay, periodic) : task);
     this.runNextArrival(callTime);
 })
+
 .method('runNextArrival', function(now){
     if (this.taskFlow.queue.length === 0) {
         return null;
@@ -32,13 +40,22 @@ method(Schedular, 'atonce', function(task){
     this._lastNextArrival = nextArrival;
     this.timer = this.clockTimer.setTimer(this.runTheTaskBind, Math.max(0, nextArrival - now))
 })
+
 .method('runTheTaskBind', function(){
     this.timer = null;
     this._runTheTask(this.clockTimer.now());
 })
+
 .method('_runTheTask', function(now){
     this.taskFlow.runTask(now, safeRunTask);
     this.runNextArrival(this.clockTimer.now());
+})
+
+/**
+ * below is the instance method
+ */
+.method('periodic', function(duration, task){
+    this.schedule(0, duration, this.now(), task)
 })
 
 function safeRunTask(taskLike, insertCb){
@@ -52,3 +69,6 @@ function safeRunTask(taskLike, insertCb){
         insertCb(taskLike)
     }
 }
+export default Schedular
+
+

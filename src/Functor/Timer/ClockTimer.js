@@ -1,18 +1,21 @@
-import {method} from '../util.js'
-import Task from './Task.js'
+import {method} from '../../util.js'
+import Task from '../Task/Task.js'
 
-export default ClickTimer
+export default ClockTimer
 
-function ClickTimer(){}
+function ClockTimer(){}
 
-method(ClickTimer, 'now', Date.now)
+ClockTimer.of = function(){
+    return new ClockTimer();
+}
+
+method(ClockTimer, 'now', Date.now)
 .method('setTimer', function(fn, delay){
     return delay <= 0 ? runAsTask(fn) : setTimeout(timer, delay);
 })
 .method('clearTimer', function foo(timer){
     return timer instanceof Task ? timer.stop() : clearTimeout(timer);
 })
-
 
 function runAsTask(taskLike){
     Promise.resolve(taskLike).then(_run);
