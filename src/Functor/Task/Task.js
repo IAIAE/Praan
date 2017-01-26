@@ -1,7 +1,7 @@
 import {method} from '../../util.js'
 
 function Task(fn){
-    this.__value = fn;
+    this.fn = fn;
     this.active = true;
 }
 
@@ -10,7 +10,7 @@ Task.of = function(fn){
 }
 
 method(Task, 'run', function (){
-    return this.active && this.__value();
+    return this.active && this.fn();
 })
 .method('err', function (err){
     throw err;

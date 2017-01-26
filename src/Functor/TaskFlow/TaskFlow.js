@@ -49,20 +49,30 @@ method(TaskFlow, 'insert', function (timeTask) {
     var k = 0;
     var taskBundles;
     var self = this;
-    while (when < this.queue[i].time) {
+    // console.info('IAIAE--> this.queue is ',this.queue);
+    // console.info('IAIAE--> when is ',when);
+    // console.info('IAIAE--> ',when > this.queue[i].time);
+    while (i < this.queue.length && when > this.queue[i].time) {
         i++;
     }
     taskBundles = this.queue.splice(0, i);
     for (; j < i; j++) {
         var taskBundle = taskBundles[j];
         var len = taskBundle.bundle.length;
-        for(; k < len; k++){
-            runFunc(taskBundle[k], function(timeTask){
+        for(k = 0; k < len; k++){
+            runFunc(taskBundle.bundle[k], function(timeTask){
                 return self.insert.call(self, timeTask);
             })
         }
     }
-});
+})
+
+.method('nextArrival', function(){
+    if(this.queue.length === 0){
+        return null;
+    }
+    return this.queue[0].time;
+})
 
 
 

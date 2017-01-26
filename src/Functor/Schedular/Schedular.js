@@ -13,6 +13,7 @@ Schedular.of = function(timer, flow){
 var warp = function(task, time, periodic){
     task.time = time;
     task.periodic = periodic;
+    return task;
 }
 method(Schedular, 'atonce', function(task){
     var now = this.now();
@@ -24,29 +25,24 @@ method(Schedular, 'atonce', function(task){
 })
 
 .method('schedule', function(delay, periodic, callTime, task){
-    this.taskFlow.add(task.time === undefined ? warp(task, callTime + delay, periodic) : task);
+    this.taskFlow.insert(task.time === undefined ? warp(task, callTime + delay, periodic) : task);
     this.runNextArrival(callTime);
 })
 
 .method('runNextArrival', function(now){
-    if (this.taskFlow.queue.length === 0) {
-        return null;
-    }
     var nextArrival = this.taskFlow.nextArrival();
+    if(nextArrival == null) return null;
     if (this._lastNextArrival && nextArrival < this._lastNextArrival) {
         //  there has task in ready but not execute yet.
         this.unShedule();
     }
     this._lastNextArrival = nextArrival;
-    this.timer = this.clockTimer.setTimer(this.runTheTaskBind, Math.max(0, nextArrival - now))
+    this.timer = this.clockTimer.setTimer(this._runTheTask.bind(this), Math.max(0, nextArrival - now))
 })
 
-.method('runTheTaskBind', function(){
+.method('_runTheTask', function(){
     this.timer = null;
-    this._runTheTask(this.clockTimer.now());
-})
-
-.method('_runTheTask', function(now){
+    var now = this.clockTimer.now()
     this.taskFlow.runTask(now, safeRunTask);
     this.runNextArrival(this.clockTimer.now());
 })
@@ -60,6 +56,7 @@ method(Schedular, 'atonce', function(task){
 
 function safeRunTask(taskLike, insertCb){
     try{
+        console.info('this task is ', taskLike)
         taskLike.run();
     }catch(e){
         taskLike.err(e);

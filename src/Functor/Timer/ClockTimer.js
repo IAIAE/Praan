@@ -11,14 +11,14 @@ ClockTimer.of = function(){
 
 method(ClockTimer, 'now', Date.now)
 .method('setTimer', function(fn, delay){
-    return delay <= 0 ? runAsTask(fn) : setTimeout(timer, delay);
+    return delay <= 0 ? runAsTask(fn) : setTimeout(fn, delay);
 })
 .method('clearTimer', function foo(timer){
     return timer instanceof Task ? timer.stop() : clearTimeout(timer);
 })
 
-function runAsTask(taskLike){
-    Promise.resolve(taskLike).then(_run);
+function runAsTask(fn){
+    Promise.resolve(Task.of(fn)).then(_run);
 }
 
 function _run(taskLike){
