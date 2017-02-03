@@ -23,15 +23,15 @@ method(TaskFlow, 'insert', function (timeTask) {
     if (this.queue.length === 0) {
         return false;
     }
-    var index = biSearch(timeCompare, this.queue, timeTask);
+    var index = biSearch(timeCompare, this.queue, timeTask.time);
     if (index >= 0 && index < this.queue.length) {
         var taskBundle = this.queue[index];
         var innerIndex = taskBundle.indexOf(timeTask);
         if (~innerIndex) {
-            if (taskBundle.__value.length === 1) {
+            if (taskBundle.bundle.length === 1) {
                 this.queue.splice(index, 1);
             } else {
-                taskBundle.splice(innerIndex, 1);
+                taskBundle.bundle.splice(innerIndex, 1);
             }
             return true;
         }
@@ -43,15 +43,12 @@ method(TaskFlow, 'insert', function (timeTask) {
 
 
 })
-.method('runTask', function (when, runFunc) {
+.method('runTask', function (when, runFunc, scheduler) {
     var i = 0;
     var j = 0;
     var k = 0;
     var taskBundles;
     var self = this;
-    // console.info('IAIAE--> this.queue is ',this.queue);
-    // console.info('IAIAE--> when is ',when);
-    // console.info('IAIAE--> ',when > this.queue[i].time);
     while (i < this.queue.length && when > this.queue[i].time) {
         i++;
     }
@@ -60,7 +57,7 @@ method(TaskFlow, 'insert', function (timeTask) {
         var taskBundle = taskBundles[j];
         var len = taskBundle.bundle.length;
         for(k = 0; k < len; k++){
-            runFunc(taskBundle.bundle[k], function(timeTask){
+            runFunc(taskBundle.bundle[k], scheduler, function(timeTask){
                 return self.insert.call(self, timeTask);
             })
         }
@@ -76,8 +73,8 @@ method(TaskFlow, 'insert', function (timeTask) {
 
 
 
-var timeCompare = function (timeTask, taskBundle) {
-    return timeTask.time - taskBundle[0].time;
+var timeCompare = function (time, taskBundle) {
+    return time - taskBundle.time;
 }
 
 function biSearch(timeCompare, sortedArray, t) {
@@ -102,13 +99,11 @@ function biSearch(timeCompare, sortedArray, t) {
 
 function biSearchAndInsert(queue, timeTask) {
     var l = queue.length
-
     var i = biSearch(timeCompare, queue, timeTask.time);
-
     if (i >= l) {
         queue.push(new TaskBundle(timeTask))
     } else if (timeTask.time === queue[i].time) {
-        queue[i].__value.push(timeTask)
+        queue[i].add(timeTask)
     } else {
         queue.splice(i, 0, new TaskBundle(timeTask))
     }

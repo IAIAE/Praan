@@ -1,8 +1,6 @@
 import {method} from '../../util.js'
 import Task from '../Task/Task.js'
 
-export default ClockTimer
-
 function ClockTimer(){}
 
 ClockTimer.of = function(){
@@ -11,20 +9,39 @@ ClockTimer.of = function(){
 
 method(ClockTimer, 'now', Date.now)
 .method('setTimer', function(fn, delay){
-    return delay <= 0 ? runAsTask(fn) : setTimeout(fn, delay);
+    return delay <= 0 ? deferRun(fn) : setTimeout(fn, delay);
 })
-.method('clearTimer', function foo(timer){
-    return timer instanceof Task ? timer.stop() : clearTimeout(timer);
+.method('clearTimer', function (timer){
+    return timer instanceof Ap ? timer.stop() : clearTimeout(timer);
 })
 
-function runAsTask(fn){
-    Promise.resolve(Task.of(fn)).then(_run);
+function deferRun(fn){
+    let ap = new Ap(fn);
+
+    Promise.resolve(ap).then(function(_ap){
+        try{
+            _ap.run();
+        }catch(e){
+            _ap.err(e);
+        }
+    });
+
+    return ap;
 }
 
-function _run(taskLike){
-    try{
-        return taskLike.run()
-    }catch(e){
-        return taskLike.err(e);
-    }
+function Ap(fn){
+    this.fn = fn;
+    this.active = true;
 }
+method(Ap, 'run', function(){
+    this.active && this.fn()
+})
+.method('err', function(e){
+    throw e
+})
+.method('stop', function(){
+    this.active = false;
+})
+
+
+export default ClockTimer

@@ -2,14 +2,10 @@ import Stream from './Functor/Stream.js';
 import {sMethod} from './util'
 
 // static
-import periodic from './api/static/periodic'
-import of from './api/static/of'
+import staticMethods from './api/static'
 
 function Praan(){}
 
-sMethod(Praan, {
-    of,
-    periodic
-});
+sMethod(Praan, staticMethods);
 
 export default Praan

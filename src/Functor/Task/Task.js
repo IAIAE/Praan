@@ -1,16 +1,18 @@
 import {method} from '../../util.js'
 
-function Task(fn){
-    this.fn = fn;
+function Task(value, sink){
+    this.value = value;
+    this.sink = sink;
     this.active = true;
+    this.time = null; //time will set by scheduler
 }
 
-Task.of = function(fn){
-    return new Task(fn);
+Task.of = function(value, sink){
+    return new Task(value, sink);
 }
 
-method(Task, 'run', function (){
-    return this.active && this.fn();
+method(Task, 'run', function (scheduler){
+    return this.active && this.sink.event(this.value, this.time, scheduler);
 })
 .method('err', function (err){
     throw err;
@@ -18,6 +20,8 @@ method(Task, 'run', function (){
 .method('dispose', function(){
     this.active = false;
 });
+
+
 
 export default Task;
 
