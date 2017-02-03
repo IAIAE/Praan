@@ -74,45 +74,67 @@ Source.prototype.map = function(fn){
 }
 ```
 
-sink这个概念，经常在开源的reactive库里看到，但是又很少看到一个准确的、易于理解的解释。sink大致可以翻译为“槽”，一个sink就是一个事件的加工厂。Stream里面流动的是事件，而当一个事件真正被发出时，这个事件会经过一个个sink，改变了最初的模样，最终到达观察者的手中。这样的描述是不是很像redux中的reducer？state通过一个个reducer，将最终的产物的交给store。sink也一样，一个water经过一个个水槽加工厂，将最终的产物交给observer。其中道理没想象中神秘。
+> sink这个概念，经常在开源的reactive库里看到，但是又很少看到一个准确的、易于理解的解释。sink大致可以翻译为“槽”，一个sink就是一个事件的加工厂。Stream里面流动的是事件，而当一个事件真正被发出时，这个事件会经过一个个sink，改变了最初的模样，最终到达观察者的手中。这样的描述是不是很像redux中的reducer？state通过一个个reducer，将最终的产物的交给store。sink也一样，一个water经过一个个水槽加工厂，将最终的产物交给observer。其中道理没想象中神秘。
 
-至于map函数，我们也可以再定义Sink类，实现map方法，代码会更加优雅：
+
+下图展示了一个请求网络资源的sink组合。黄色背景的方框即是一个sink。
+![](https://github.com/IAIAE/Praan/blob/master/img/sinks.png)
+
+对于sink函数的设计也是需要详细讨论的，最初，每个sink函数都被简单的设计为输入输出的纯函数。当source发出一个data，经过重重sinks，最后输出的结果用一个reduce函数就可以完成：
 
 ```javascript
-function Sink(fn){
-    this.fn = fn;
-}
-Sink.prototype.map = function(fn){
-    return x => fn(this.fn(x));
+var finalData = this.sinks.reduce(function(seed, sink){
+    return sink(seed);
+}, data);
+```
+这样设计期初看起来非常优雅，要是所有函数都是没有副作用的纯函数该多好啊~事实上，这种方法我们没法完成异步的操作。例如，需要加入一个`delaySink`。该sink会hold住data，若干秒之后再将它交给下一个sink。这样的需求纯函数的sink是没办法完成的。所以我参照了redux中间件的代码，如果每一个sink都能取得对下一个sink的引用，那么就可以由sink来控制数据的向下传递时间和方式。redux中间件的设计方法其实也参考了express的中间件，可以去看[这里](http://redux.js.org/docs/advanced/Middleware.html)的文章了解中间件的代码实现。
+
+最终，sink函数的接口被设计成这样：
+```javascript
+source.map(function(value, time, nextSink, scheduler){
+    var nextValue = value;
+    // do something will nextValue
+    nextSink.event(nextValue);
+});
+```
+例如，对于`Stream.prototype.map`的实现就是：
+
+```javascript
+Stream.prototype.map = function(fn){
+    return Stream.of(this.source.map(function(value, time, nextSink, scheduler){
+        nextSink.event(fn(value), time, scheduler)
+    }));
 }
 ```
+这样就实现了`Praan.periodic(1000,1).map(data => data + 1)`这样的接口调用。
+
 ## 利用`observe`观察流发射出的事件
 回顾一下，流发射出的事件在这篇文档里被描述为Source的water属性。water在流出source之前会经过sink的层层加工。然后我们如何观察这段水流（事件）呢？
 
-经过的第一和第二步骤，形形色色的stream被创造了出来，但是这个水管中还是没有水在流动，我们还要激活它，激活水的源头。给`Source`构造函数再加一个active方法，当调用`active`方法后，这个水源才真正源源不断的输送水流（事件）。
+经过的第一和第二步骤，形形色色的stream被创造了出来，但是这个水管中还是没有水在流动，我们还要激活它，激活水的源头。给`Source`构造函数再加一个active方法，当调用`sluice`方法后，这个水源才真正源源不断的输送水流（事件）。
 
 ```javascript
-Source.prototype.active = function(){
+Source.prototype.sluice = function(){
     // 问题来了
 }
 ```
-问题来了，active方法里面要怎样实现呢？
+问题来了，sluice方法里面要怎样实现呢？
 
-注意到，一旦active，source就需要按需触发事件，本质上还是需要`setTimeout`来完成。不同的source需要触发事件的方式不一样，本文的例子，periodic源是需要每隔1秒周期性的发射水流（事件），换做其他流，可能就需要其他的事件发射规律，这就涉及到：
+注意到，一旦sluice，source就需要按需触发事件，本质上还是需要`setTimeout`来完成。不同的source需要触发事件的方式不一样，本文的例子，periodic源是需要每隔1秒周期性的发射水流（事件），换做其他流，可能就需要其他的事件发射规律，这就涉及到：
 
 1. 计算出时间点（timestamp）
 2. 利用setTimeout往js的时间队列里添加方法
 3. 有一个类来管理这一切
 
-第一点，我们实现一个TaskFlow，负责计算每个task应该在多久之后执行；第二点，我们实现一个Timer，职责很简单，就是根据传入的timestamp往队列里添加方法；第三点，我们实现一个Scheduler，负责管理TaskFlow和Timer。
+第一点，需要实现一个TaskFlow，负责计算每个task应该在多久之后执行；第二点，我们实现一个Timer，职责很简单，就是根据传入的timestamp往队列里添加方法；第三点，我们实现一个Scheduler，负责管理TaskFlow和Timer。
 
 > 这三者的实现代码比较繁杂，Praan的这部分代码也是参考mostjs完成的。有兴趣可以去看源码。这里只讲怎么用。
 
 有了Scheduler类，source激活就等于往Scheduler里面丢一个任务，Scheduler会自动管理好这个task，每一秒钟调用这个task一次。
 
 ```javascript
-Source.prototype.active = function(){
-    scheduler.schedule(this.delay, this.periodic, this.value, Task.of( this.sinks));
+Source.prototype.sluice = function(){
+    scheduler.schedule(this.delay, this.periodic,  Task.of(this.value, this.sinks));
 }
 ```
 `scheduler`每一秒钟会调用task.run一次，`task.run`的实现大致如下
@@ -135,7 +157,7 @@ Stream.prototype.observe = function(fn){
     this.source.active();
 }
 ```
-
+![](https://github.com/IAIAE/Praan/blob/master/img/source-sink.png)
 这样，除了最复杂的时序控制的`Scheduler`的代码实现，我们已经完整阐述了一个Stream的建模方法。可以参考下图，再回到文章看不懂的地方。
 
 ![](../img/stream_structure.png)
