@@ -1,5 +1,44 @@
+
+本文首先简单介绍响应式编程的应用，随之详细阐述如何实现一个轻量的响应式函数库。
+
+# 响应式编程
+这篇文章介绍一种编程泛型，叫做响应式编程。将响应式称作“编程泛型”可能有些夸大其作用范畴，不过通过引入响应式确实会改变我们对特定问题的思考方法，就像刚接触redux带来的函数式编程一样。
+
+响应式和从前听说的“面向事件编程”很像，是针对事件的一种处理办法，且比从前的on\off\emit方法来处理事件，响应式会做得更加的优雅。
+
+响应式编程基于“流（Stream）”这个对象。“流”是一个管道，管道中流淌的是事件携带的数据，我们在这个管道的一个截面监听事件，当该事件流淌通过截面时，触发我们的事件句柄。
+![](https://github.com/IAIAE/Praan/blob/master/img/stream_illustrate.png)
+
+无论是异步Ajax的返回、用户UI事件、还是自定义的数据，都可以作为管道数据的来源，利用统一的api进行处理。
+![](https://github.com/IAIAE/Praan/blob/master/img/diff_source.png)
+
+来看一看代码吧~
+
+首先引入一个响应式的函数库，我用的[most.js](https://github.com/cujojs/most)，还可以选择：
+- [Rxjs](https://github.com/ReactiveX/rxjs)
+- [xstream](https://github.com/staltz/xstream)
+- [highland](https://github.com/caolan/highland)
+- [baconjs](https://github.com/baconjs/bacon.js/)
+
+下面的代码，你将每个一秒接受到一个`'hello'`
+```javascript
+var most = require('most')
+most.periodic(1000,'hello')
+    .observe(console.info)
+```
+
+下面的代码，你将延时一秒获得鼠标的move信息。
+```javascript
+most.fromEvent('mousemove', mainDiv)
+    .delay(1000)
+    .observe(handler)
+```
+利用此代码可以做出一个很有意思的效果：
+![](https://github.com/IAIAE/Praan/blob/master/img/follow.gif)
+
+
 # 如何构建一个stream
-在读这篇文档之前，读者应该已经能够掌握响应式编程的基本的使用技巧：知道如何创建一个流（stream），并且会用`map`函数将一个流映射为一个新的流，并且能够使用`observe`函数观察并处理流发射出的事件信息。
+以下内容需要读者掌握响应式编程的基本的使用技巧：知道如何创建一个流（stream），并且会用`map`函数将一个流映射为一个新的流，并且能够使用`observe`函数观察并处理流发射出的事件信息。
 
 以上的应用可以用下面一段简单的代码概括：
 ```javascript

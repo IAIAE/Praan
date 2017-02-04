@@ -10,8 +10,6 @@ Schedular.of = function(timer, flow){
     return new Schedular(timer, flow);
 }
 
-var count = 1;
-
 
 var warp = function(task, time, periodic){
     task.time = time;
@@ -89,7 +87,6 @@ method(Schedular, 'now', function(){
     this.timer = null;
     var now = this.clockTimer.now()
     this.taskFlow.runTask(now, safeRunTask, this);
-    count++
     this.runNextArrival(this.clockTimer.now());
 })
 
