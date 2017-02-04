@@ -36,11 +36,13 @@ most.fromEvent('mousemove', mainDiv)
 利用此代码可以做出一个很有意思的效果：
 ![](https://github.com/IAIAE/Praan/blob/master/img/follow.gif)
 
+更多的例子，可以在各开源函数库的examples中查看。这里就不在复述。
+
+下面的文章内容，将讨论如何手动实现一个轻量化的响应式函数库。从设计到代码，都有阐述。
 
 # 如何构建一个stream
-以下内容需要读者掌握响应式编程的基本的使用技巧：知道如何创建一个流（stream），并且会用`map`函数将一个流映射为一个新的流，并且能够使用`observe`函数观察并处理流发射出的事件信息。
+以下内容基于我自己写的一个响应式库：[Praan.js](https://github.com/IAIAE/Praan)。我们从一个简单的例子入手，请看下面的代码：
 
-以上的应用可以用下面一段简单的代码概括：
 ```javascript
 Praan.periodic(1000, 1)
     .map(data => data + 1)
@@ -116,7 +118,7 @@ Source.prototype.map = function(fn){
 > sink这个概念，经常在开源的reactive库里看到，但是又很少看到一个准确的、易于理解的解释。sink大致可以翻译为“槽”，一个sink就是一个事件的加工厂。Stream里面流动的是事件，而当一个事件真正被发出时，这个事件会经过一个个sink，改变了最初的模样，最终到达观察者的手中。这样的描述是不是很像redux中的reducer？state通过一个个reducer，将最终的产物的交给store。sink也一样，一个water经过一个个水槽加工厂，将最终的产物交给observer。其中道理没想象中神秘。
 
 
-下图展示了一个请求网络资源的sink组合。黄色背景的方框即是一个sink。
+下图展示了一个请求网络资源的sink组合。黄色背景的方框即是一个个sink。
 ![](https://github.com/IAIAE/Praan/blob/master/img/sinks.png)
 
 对于sink函数的设计也是需要详细讨论的，最初，每个sink函数都被简单的设计为输入输出的纯函数。当source发出一个data，经过重重sinks，最后输出的结果用一个reduce函数就可以完成：
@@ -134,6 +136,8 @@ source.map(function(value, time, nextSink, scheduler){
     var nextValue = value;
     // do something will nextValue
     nextSink.event(nextValue);
+    // if the call is async, you can also handler it.
+    // new Promise(...).then(_=>nextSink.event(_))
 });
 ```
 例如，对于`Stream.prototype.map`的实现就是：
@@ -148,9 +152,9 @@ Stream.prototype.map = function(fn){
 这样就实现了`Praan.periodic(1000,1).map(data => data + 1)`这样的接口调用。
 
 ## 利用`observe`观察流发射出的事件
-回顾一下，流发射出的事件在这篇文档里被描述为Source的water属性。water在流出source之前会经过sink的层层加工。然后我们如何观察这段水流（事件）呢？
+回顾一下，流发射出的事件被描述为Source的water属性。water在流出Source之前会经过sink的层层加工。然后我们如何观察这段水流（事件）呢？
 
-经过的第一和第二步骤，形形色色的stream被创造了出来，但是这个水管中还是没有水在流动，我们还要激活它，激活水的源头。给`Source`构造函数再加一个active方法，当调用`sluice`方法后，这个水源才真正源源不断的输送水流（事件）。
+经过的第一和第二步骤，形形色色的stream被创造了出来，但是这个水管中还是没有水在流动，我们还要激活它，激活水的源头。给`Source`构造函数再加一个sluice（开闸）方法，当调用`sluice`方法后，这个水源才真正源源不断的输送水流（事件）。
 
 ```javascript
 Source.prototype.sluice = function(){
@@ -162,45 +166,44 @@ Source.prototype.sluice = function(){
 注意到，一旦sluice，source就需要按需触发事件，本质上还是需要`setTimeout`来完成。不同的source需要触发事件的方式不一样，本文的例子，periodic源是需要每隔1秒周期性的发射水流（事件），换做其他流，可能就需要其他的事件发射规律，这就涉及到：
 
 1. 计算出时间点（timestamp）
-2. 利用setTimeout往js的时间队列里添加方法
-3. 有一个类来管理这一切
+2. 根据timestamp利用setTimeout往js的时间队列里添加方法
+3. 设计一个类来管理1和2
 
 第一点，需要实现一个TaskFlow，负责计算每个task应该在多久之后执行；第二点，我们实现一个Timer，职责很简单，就是根据传入的timestamp往队列里添加方法；第三点，我们实现一个Scheduler，负责管理TaskFlow和Timer。
 
-> 这三者的实现代码比较繁杂，Praan的这部分代码也是参考mostjs完成的。有兴趣可以去看源码。这里只讲怎么用。
+> 这三者的实现代码比较繁杂，Praan的这部分代码也是参考mostjs完成的。有兴趣可以去看源码。
 
-有了Scheduler类，source激活就等于往Scheduler里面丢一个任务，Scheduler会自动管理好这个task，每一秒钟调用这个task一次。
+**Scheduler类有一个类似事件循环的机制，每当有task分配给scheduler，它会执行这个task，然后再在队列里寻找是否还有下一个task。其流程图如下：**
+
+![](https://github.com/IAIAE/Praan/blob/master/img/scheduler_flow.png)
+
+有了Scheduler类对于时序的控制，激活一个source就等于往Scheduler里面丢一个task，Scheduler会自动管理好这个task。这个接口调用起来也很简便：
 
 ```javascript
 Source.prototype.sluice = function(){
     scheduler.schedule(this.delay, this.periodic,  Task.of(this.value, this.sinks));
 }
 ```
-`scheduler`每一秒钟会调用task.run一次，`task.run`的实现大致如下
-```javascript
-Task.prototype.run = function(timeStamp, value){
-    this.sinks.reduce((water, sink)=>{
-        return sink(water);
-    },value)
-}
-```
+`scheduler`每一秒钟会调用task.run一次，`task.run`会调用第一个sink，然后第一个sink按需调用`nextSink`方法将数据交给下一个sink。代码的实现请看中间件的实现方法。
 
-最后，既然掌握了激活source的方法，剩下的就是观察source发射的事件了，原理更简单，给source.sinks的最后加入一个观察函数即可：
+
+最后，既然掌握了激活source的方法，剩下的就是观察source发射的事件了，原理更简单，给source.sinks的最后加入一个观察用的sink即可：
 
 ```javascript
 function watch(fn){
-    return x => (fn(x), x)
+    return (value, time, nextSink, scheduler) => fn(value)
 }
 Stream.prototype.observe = function(fn){
     this.source.map(watch(fn));
-    this.source.active();
+    this.source.sluice();
 }
 ```
 ![](https://github.com/IAIAE/Praan/blob/master/img/source-sink.png)
-这样，除了最复杂的时序控制的`Scheduler`的代码实现，我们已经完整阐述了一个Stream的建模方法。可以参考下图，再回到文章看不懂的地方。
 
-![](../img/stream_structure.png)
+这样，除了最复杂的时序控制的`Scheduler`的代码实现，我们已经阐述了一个Stream的建模方法。可以参考下图，再回到文章看不懂的地方。
 
-P.S. 实际实现还有很多细节问题导致实际源码和文中不一致，比如sink的实现并不是作为source的属性。但总体思想并没有改变。
+![](https://github.com/IAIAE/Praan/blob/master/img/stream_structure.png)
+
+P.S. Praan的实际实现细节
 
 
