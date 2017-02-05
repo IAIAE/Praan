@@ -8,13 +8,13 @@ const emptyFunc = function(){}
 // })
 
 function foo(fn){
-    return next => Sink.of((value, time, scheduler) => fn(value, time, next, scheduler))
+    return next => Sink.of((value, time, scheduler, task) => fn(value, time, next, scheduler, task))
 }
 
 
 export default function reInitSink(sinkArr){
     let len = sinkArr.length;
-    let next = emptyFunc
+    let next = Sink.of(emptyFunc)
     for(var i=len-1; i>=0; i--){
         next = foo(sinkArr[i])(next);
     }

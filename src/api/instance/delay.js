@@ -6,7 +6,7 @@ export default function delay(time){
     return Stream.of(this.source.map(function(value, execTime, nextSink, scheduler){
         scheduler.accurate(execTime + time, Task.of(
             value, 
-            Sink.of((value, time, scheduler) => nextSink.event(value, time, scheduler))
+            Sink.of((_value, _time, _scheduler, _task) => nextSink.event(_value, _time, _scheduler, _task))
             ))
     }));
 }

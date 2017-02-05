@@ -6,8 +6,8 @@ Sink.of = function(fn){
     return new Sink(fn);
 }
 
-Sink.prototype.event = function(value, time, scheduler){
-    this.fn(value, time, scheduler)
+Sink.prototype.event = function(value, time, scheduler, task){
+    this.fn(value, time, scheduler, task)
 }
 
 export default Sink

@@ -12,7 +12,7 @@ Task.of = function(value, sink){
 }
 
 method(Task, 'run', function (scheduler){
-    return this.active && this.sink.event(this.value, this.time, scheduler);
+    return this.active && this.sink.event(this.value, this.time, scheduler, this);
 })
 .method('err', function (err){
     throw err;
