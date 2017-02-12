@@ -9,7 +9,7 @@ export default function flatMap(fn){
                 nextSink.event(_value, time, scheduler, task)
             })
         }else{
-            console.error('flatMap error:: value: `'+value+'` is not a Stream');
+            console.error('flatMap error:: value: `'+value+'` is not a Stream. use map instead.');
             nextSink.event(mapedValue, time, scheduler, task)
         }
     }));

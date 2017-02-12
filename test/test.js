@@ -28,6 +28,11 @@ Praan.of(promise)
     .delay(3000)
     .map(data => 'prefix' + data)
     .flatMap(data => Praan.of(getPromise(data)))
-    .flatMap(data => data+1)
+    .map(data => data+1)
     .observe(console.info)
+
+
+// Praan.periodic(1000, 1)
+//     .scan((seed, value) => seed+value, 0)
+//     .observe(console.info)
 
