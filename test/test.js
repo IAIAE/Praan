@@ -31,16 +31,16 @@ Praan.of(promise)
     .flatMap(data => Praan.of(getPromise(data)))
     .tap(_=>console.info('before delay..',_))
     .delay(3000)
-    .map(data => {
-        console.info('interrapt', data)
+    .then(data => {
+        return data+1;
     })
-    .flatMap(data => Praan.of(errPromise(data)))
+    .then(data => Praan.of(errPromise(data)))
     .map(data => data+1)
     .flatMap(data=> Praan.of(getPromise(data)))
     .error(function(e){
         console.info('catch the error::::',e);
     })
-    .observe(console.info)
+    .observe()
 
 
 

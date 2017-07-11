@@ -1,6 +1,6 @@
 {
   "name": "praan",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "description": "a reactive stream model for programming",
   "main": "dist/index.js",
   "directories": {

@@ -427,6 +427,33 @@ function end(_fn, _err) {
     this.source.sluice(defaultSchedular());
 }
 
+function then(_fn) {
+    return Stream.of(this.source.map({
+        fn: function fn(value, time, nextSink, scheduler, task) {
+            try {
+                var mapedValue = _fn(value);
+            } catch (e) {
+                return nextSink.err({ msg: 'flatMap error', err: e });
+            }
+
+            if (mapedValue === undefined) return; //if no return, means you don't wanna go on.
+
+            if (mapedValue instanceof Stream) {
+                mapedValue.end(function (_value) {
+                    nextSink.event(_value, time, scheduler, task);
+                }, function (err) {
+                    nextSink.err(err);
+                });
+            } else {
+                nextSink.event(mapedValue, time, scheduler, task);
+            }
+        },
+        err: function err(e, nextSink) {
+            nextSink.err(e);
+        }
+    }));
+}
+
 var apis = {
     observe: observe,
     map: map,
@@ -435,6 +462,7 @@ var apis = {
     flatMap: flatMap,
     scan: scan,
     error: error$1,
+    then: then,
     end: end
 };
 

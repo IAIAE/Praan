@@ -6,6 +6,7 @@ import flatMap from './flatMap'
 import scan from './scan'
 import error from './error'
 import end from './end'
+import then from './then'
 
 export default {
     observe,
@@ -15,5 +16,6 @@ export default {
     flatMap,
     scan,
     error,
+    then,
     end
 }
