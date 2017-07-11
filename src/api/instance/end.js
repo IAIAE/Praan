@@ -1,16 +1,16 @@
 import defaultSchedular from '../../Functor/Schedular/defaultSchedular'
 import Sink from '../../Functor/Sink/Sink'
 
-function observe(fn){
+function end(fn, err){
     this.source = this.source.map({
         fn: function(value){
-            fn && fn(value)
+            fn(value)
         },
-        err: function(e, nextSink){
-            nextSink.err(e);
+        err: function(e){
+            err(e)
         }
     });
     this.source.sluice(defaultSchedular())
 }
 
-export default observe;
+export default end;

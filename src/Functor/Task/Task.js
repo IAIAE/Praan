@@ -15,7 +15,7 @@ method(Task, 'run', function (scheduler){
     return this.active && this.sink.event(this.value, this.time, scheduler, this);
 })
 .method('err', function (err){
-    throw err;
+    throw err
 })
 .method('dispose', function(){
     this.active = false;

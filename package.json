@@ -1,0 +1,36 @@
+{
+  "name": "praan",
+  "version": "1.0.0",
+  "description": "a reactive stream model for programming",
+  "main": "dist/index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.22.2",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.22.0",
+    "babel-preset-es2015": "^6.24.1",
+    "rollup": "^0.41.1"
+  },
+  "scripts": {
+    "test": "node test/test.js",
+    "build": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IAIAE/Praan.git"
+  },
+  "keywords": [
+    "reactive",
+    "stream"
+  ],
+  "author": "IAIAE",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/IAIAE/Praan/issues"
+  },
+  "homepage": "https://github.com/IAIAE/Praan#readme"
+}

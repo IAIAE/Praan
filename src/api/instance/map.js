@@ -1,9 +1,20 @@
 import Stream from '../../Functor/Stream.js'
 import Sink from '../../Functor/Sink/Sink'
 
-export default function map(fn){
-    return Stream.of(this.source.map(function(value, time, nextSink, scheduler, task){
-        nextSink.event(fn(value), time, scheduler, task)
+export default function map(fn) {
+    return Stream.of(this.source.map({
+        fn: function(value, time, nextSink, scheduler, task) {
+            let _value;
+            try {
+                _value = fn(value)
+            } catch (e) {
+                return nextSink.err({ msg: 'map error ', err: e });
+            }
+            nextSink.event(_value, time, scheduler, task)
+        },
+        err: function (e, nextSink) {
+            nextSink.err(e);
+        }
     }));
 }
 

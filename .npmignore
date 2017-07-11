@@ -1,0 +1,8 @@
+node_modules
+img
+docs
+.vscode
+src
+test
+.editorconfig
+.babelrc

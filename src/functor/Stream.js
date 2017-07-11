@@ -1,4 +1,4 @@
-import * as apis from '../api/instance'
+import apis from '../api/instance/index.js'
 
 function Stream(source){
     this.source = source;

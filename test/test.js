@@ -1,4 +1,4 @@
-import Praan from '../src/index'
+var Praan =  require('../dist/index')
 
 // Praan.periodic(1000, 123)
 //     .map(data => data + 1)
@@ -22,14 +22,25 @@ function getPromise(value){
         done(value + ' promise');
     })
 }
+
+function errPromise(){
+    return Promise.reject({msg: 'reject'})
+}
 Praan.of(promise)
     .map(data => data + 'test')
     .flatMap(data => Praan.of(getPromise(data)))
+    .tap(_=>console.info('before delay..',_))
     .delay(3000)
     .map(data => 'prefix' + data)
-    .flatMap(data => Praan.of(getPromise(data)))
+    .flatMap(data => Praan.of(errPromise(data)))
     .map(data => data+1)
+    .flatMap(data=> Praan.of(getPromise(data)))
+    .error(function(e){
+        console.info('catch the error::::',e);
+    })
     .observe(console.info)
+
+
 
 
 // Praan.periodic(1000, 1)

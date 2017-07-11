@@ -27,11 +27,6 @@ var stream = praan.of([1,2,3,4]);
     .map(item=>item+1);
 stream.observe(console.info);   // 1,2,3,4
 
-// start and end
-praan.start("let's")
-    repeat('dance', 1000)
-    .end(3001)
-// let's dance dance dance
 
 /**
  * promise
@@ -39,23 +34,14 @@ praan.start("let's")
 praan.fromPromise(Promise.resolve('praan'));
 
 /**
- * ui event
+ * exception catch
  */
-praan.fromEvent('input', input)
-
-/**
- * customer event
- */
-var stream = praan.of();
-emitter.on('data', stream.recieve);
-setTimeout(_=>emitter.trigger('data',{name:'praan'}),1000);
-stream.observe(console.info);
+praan.fromPromise(Promise.reject({msg:'opps! promise reject at beginning!!'})))
+    .map(data=>data+1)
+    .flatMap(data=> praan.of(getPromise(data)))
+    .catch(e=>{
+        console.info(e)    //{msg:'opps! promise reject at beginning!!'}
+    })
+    .observe()
 // -----praan----
 ```
-
-
-
-
-
-
-
