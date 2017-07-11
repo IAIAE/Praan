@@ -9,6 +9,9 @@ export default function flatMap(fn) {
             } catch (e) {
                 return nextSink.err({ msg: 'flatMap error', err: e });
             }
+            
+            if(mapedValue === undefined) return; //if no return, means you don't wanna go on.
+
             if (mapedValue instanceof Stream) {
                 mapedValue.end(function (_value) {
                     nextSink.event(_value, time, scheduler, task)

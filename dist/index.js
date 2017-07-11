@@ -327,7 +327,7 @@ function map(_fn) {
             } catch (e) {
                 return nextSink.err({ msg: 'map error ', err: e });
             }
-            nextSink.event(_value, time, scheduler, task);
+            _value !== undefined && nextSink.event(_value, time, scheduler, task);
         },
         err: function err(e, nextSink) {
             nextSink.err(e);
@@ -368,6 +368,9 @@ function flatMap(_fn) {
             } catch (e) {
                 return nextSink.err({ msg: 'flatMap error', err: e });
             }
+
+            if (mapedValue === undefined) return; //if no return, means you don't wanna go on.
+
             if (mapedValue instanceof Stream) {
                 mapedValue.end(function (_value) {
                     nextSink.event(_value, time, scheduler, task);

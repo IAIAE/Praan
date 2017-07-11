@@ -10,7 +10,7 @@ export default function map(fn) {
             } catch (e) {
                 return nextSink.err({ msg: 'map error ', err: e });
             }
-            nextSink.event(_value, time, scheduler, task)
+            (_value!==undefined) && nextSink.event(_value, time, scheduler, task)
         },
         err: function (e, nextSink) {
             nextSink.err(e);
