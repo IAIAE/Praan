@@ -7,7 +7,7 @@ export default function then(fn) {
             try {
                 var mapedValue = fn(value);
             } catch (e) {
-                return nextSink.err({ msg: 'flatMap error', err: e });
+                return nextSink.err(e);
             }
             
             if(mapedValue === undefined) return; //if no return, means you don't wanna go on.
