@@ -325,7 +325,7 @@ function map(_fn) {
             try {
                 _value = _fn(value);
             } catch (e) {
-                return nextSink.err({ msg: 'map error ', err: e });
+                return nextSink.err(e);
             }
             _value !== undefined && nextSink.event(_value, time, scheduler, task);
         },
@@ -433,7 +433,7 @@ function then(_fn) {
             try {
                 var mapedValue = _fn(value);
             } catch (e) {
-                return nextSink.err({ msg: 'flatMap error', err: e });
+                return nextSink.err(e);
             }
 
             if (mapedValue === undefined) return; //if no return, means you don't wanna go on.

@@ -15,6 +15,7 @@ export default {
     delay,
     flatMap,
     scan,
+    catch: error,
     error,
     then,
     end
