@@ -3,10 +3,12 @@ import Just from '../../Functor/Headspring/Just'
 import FromArray from '../../Functor/Headspring/FromArray'
 import FromPromise from '../../Functor/Headspring/FromPromise'
 // import Empty from '../../Functor/Headspring/Empty'
-
+function isPromise(data){
+    return !(data instanceof Stream) && (typeof data === 'object') && (typeof data.then === 'function')
+}
 function getType(data){
     if(Array.isArray(data) && data.length > 0) return 'array'
-    else if(typeof data === 'object' && typeof data.then === 'function') return 'promise'
+    else if(isPromise(data)) return 'promise'
     else if(data == null || (Array.isArray(data) && data.length === 0)) return 'empty'
     else return 'normal'
 }
