@@ -13,8 +13,8 @@ Sink.of = function(fn, err){
 Sink.prototype.event = function(value, time, scheduler, task){
     this.fn(value, time, scheduler, task)
 }
-Sink.prototype.err = function(e){
-    this.err(e);
+Sink.prototype.err = function(e, time, scheduler, task){
+    this.err(e, time, scheduler, task);
 }
 
 export default Sink

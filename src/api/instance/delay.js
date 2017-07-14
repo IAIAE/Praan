@@ -10,8 +10,8 @@ export default function delay(time) {
                 Sink.of((_value, _time, _scheduler, _task) => nextSink.event(_value, _time, _scheduler, _task))
             ))
         },
-        err: function(e, nextSink){
-            nextSink.err(e);
+        err: function(e, execTime, nextSink, scheduler, task){
+            nextSink.err(e, execTime, scheduler, task);
         }
     }));
 }

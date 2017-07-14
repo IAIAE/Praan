@@ -302,8 +302,8 @@ Sink.of = function (fn, err) {
 Sink.prototype.event = function (value, time, scheduler, task) {
     this.fn(value, time, scheduler, task);
 };
-Sink.prototype.err = function (e) {
-    this.err(e);
+Sink.prototype.err = function (e, time, scheduler, task) {
+    this.err(e, time, scheduler, task);
 };
 
 function observe(_fn) {
@@ -318,31 +318,18 @@ function observe(_fn) {
     this.source.sluice(defaultSchedular());
 }
 
-function map(_fn) {
-    return Stream.of(this.source.map({
-        fn: function fn(value, time, nextSink, scheduler, task) {
-            var _value = void 0;
-            try {
-                _value = _fn(value);
-            } catch (e) {
-                return nextSink.err(e);
-            }
-            _value !== undefined && nextSink.event(_value, time, scheduler, task);
-        },
-        err: function err(e, nextSink) {
-            nextSink.err(e);
-        }
-    }));
-}
-
 function tap(_fn) {
     return Stream.of(this.source.map({
         fn: function fn(value, time, nextSink, scheduler, task) {
-            _fn(value);
+            try {
+                _fn(value);
+            } catch (e) {
+                return nextSink.err(e, time, scheduler, task);
+            }
             nextSink.event(value, time, scheduler, task);
         },
-        err: function err(e, nextSink) {
-            nextSink.err(e);
+        err: function err(e, time, nextSink, scheduler, task) {
+            nextSink.err(e, time, scheduler, task);
         }
     }));
 }
@@ -354,62 +341,32 @@ function delay(time) {
                 return nextSink.event(_value, _time, _scheduler, _task);
             })));
         },
-        err: function err(e, nextSink) {
-            nextSink.err(e);
+        err: function err(e, execTime, nextSink, scheduler, task) {
+            nextSink.err(e, execTime, scheduler, task);
         }
     }));
 }
 
-function flatMap(_fn) {
-    return Stream.of(this.source.map({
-        fn: function fn(value, time, nextSink, scheduler, task) {
-            try {
-                var mapedValue = _fn(value);
-            } catch (e) {
-                return nextSink.err({ msg: 'flatMap error', err: e });
-            }
-
-            if (mapedValue === undefined) return; //if no return, means you don't wanna go on.
-
-            if (mapedValue instanceof Stream) {
-                mapedValue.end(function (_value) {
-                    nextSink.event(_value, time, scheduler, task);
-                }, function (err) {
-                    nextSink.err(err);
-                });
-            } else {
-                console.error('flatMap error:: value: `' + value + '` is not a Stream. use map instead.');
-                nextSink.event(mapedValue, time, scheduler, task);
-            }
-        },
-        err: function err(e, nextSink) {
-            nextSink.err(e);
-        }
-    }));
+function Restore(value) {
+    this.value = value;
 }
-
-function scan(reducer, seed) {
-    var init = seed;
-    return Stream.of(this.source.map({
-        fn: function fn(value, time, nextSink, scheduler, task) {
-            init = reducer(init, value);
-            nextSink.event(init, time, scheduler, task);
-        },
-        err: function err(e, nextSink) {
-            nextSink.err(e);
-        }
-    }));
-}
+Restore.of = function (_) {
+    return new Restore(_);
+};
 
 function error$1(fn) {
     return Stream.of(this.source.map({
         fn: function fn(value, time, nextSink, scheduler, task) {
             nextSink.event(value, time, scheduler, task);
         },
-        err: function err(e, nextSink) {
+        err: function err(e, time, nextSink, scheduler, task) {
             var result = fn(e);
             if (result !== undefined) {
-                nextSink.err(result);
+                if (result instanceof Restore) {
+                    nextSink.event(result.value, time, scheduler, task);
+                } else {
+                    nextSink.err(result, time, scheduler, task);
+                }
             }
         }
     }));
@@ -448,19 +405,18 @@ function then(_fn) {
                 nextSink.event(mapedValue, time, scheduler, task);
             }
         },
-        err: function err(e, nextSink) {
-            nextSink.err(e);
+        err: function err(e, time, nextSink, scheduler, task) {
+            nextSink.err(e, time, scheduler, task);
         }
     }));
 }
 
 var apis = {
     observe: observe,
-    map: map,
+    start: observe,
     tap: tap,
     delay: delay,
-    flatMap: flatMap,
-    scan: scan,
+    catch: error$1,
     error: error$1,
     then: then,
     end: end
@@ -494,8 +450,8 @@ function foo(obj) {
     return function (next) {
         return Sink.of(function (value, time, scheduler, task) {
             return fn(value, time, next, scheduler, task);
-        }, function (e) {
-            return err(e, next);
+        }, function (e, time, scheduler, task) {
+            return err(e, time, next, scheduler, task);
         });
     };
 }
@@ -602,9 +558,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 };
 
 // import Empty from '../../Functor/Headspring/Empty'
-
+function isPromise(data) {
+    return !(data instanceof Stream) && (typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && typeof data.then === 'function';
+}
 function getType(data) {
-    if (Array.isArray(data) && data.length > 0) return 'array';else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && typeof data.then === 'function') return 'promise';else if (data == null || Array.isArray(data) && data.length === 0) return 'empty';else return 'normal';
+    if (Array.isArray(data) && data.length > 0) return 'array';else if (isPromise(data)) return 'promise';else if (data == null || Array.isArray(data) && data.length === 0) return 'empty';else return 'normal';
 }
 
 function of(data) {
@@ -651,10 +609,15 @@ function periodic(duration, value) {
     return Stream.of(Periodic.of(duration, value));
 }
 
+function restore(data) {
+    return Restore.of(data);
+}
+
 var staticMethods = {
     of: of,
     periodic: periodic,
-    just: of
+    just: of,
+    restore: restore
 };
 
 // static

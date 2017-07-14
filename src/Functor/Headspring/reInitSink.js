@@ -14,7 +14,7 @@ function foo(obj){
     let err = obj.err;
     return next => Sink.of(
         (value, time, scheduler, task) => fn(value, time, next, scheduler, task),
-        (e) => err(e, next));
+        (e, time, scheduler, task) => err(e, time, next, scheduler, task));
 }
 
 

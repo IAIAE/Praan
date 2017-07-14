@@ -22,8 +22,8 @@ export default function then(fn) {
                 nextSink.event(mapedValue, time, scheduler, task)
             }
         },
-        err: function(e, nextSink){
-            nextSink.err(e);
+        err: function(e, time, nextSink, scheduler, task){
+            nextSink.err(e, time, scheduler, task);
         }
     }));
 }

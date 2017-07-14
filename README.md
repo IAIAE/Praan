@@ -24,7 +24,7 @@ var praan = require('praan');
 
 ```javascript
 var stream = praan.of([1,2,3,4]);
-    .map(item=>item+1);
+    .then(item=>item+1);
 stream.observe(console.info);   // 1,2,3,4
 
 
@@ -37,11 +37,11 @@ praan.fromPromise(Promise.resolve('praan'));
  * exception catch
  */
 praan.fromPromise(Promise.reject({msg:'opps! promise reject at beginning!!'})))
-    .map(data=>data+1)
-    .flatMap(data=> praan.of(getPromise(data)))
+    .then(data=>data+1)
+    .then(data=> praan.of(getPromise(data)))
     .catch(e=>{
         console.info(e)    //{msg:'opps! promise reject at beginning!!'}
     })
-    .observe()
+    .start()
 // -----praan----
 ```

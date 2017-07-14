@@ -27,20 +27,23 @@ function errPromise(){
     return Promise.reject({msg: 'reject'})
 }
 Praan.of(promise)
-    .map(data => data + 'test')
-    .flatMap(data => Praan.of(getPromise(data)))
+    .then(data => data + 'test')
+    .then(data => Praan.of(getPromise(data)))
     .tap(_=>console.info('before delay..',_))
     .delay(3000)
     .then(data => {
         return data+1;
     })
     .then(data => Praan.of(errPromise(data)))
-    .map(data => data+1)
-    .flatMap(data=> Praan.of(getPromise(data)))
-    .error(function(e){
-        console.info('catch the error::::',e);
+    .then(data => data+1)
+    .then(data=> Praan.of(getPromise(data)))
+    .catch(function(e){
+        console.info(e)
     })
-    .observe()
+    .then(data=>{
+        console.info(data)
+    })
+    .start()
 
 
 

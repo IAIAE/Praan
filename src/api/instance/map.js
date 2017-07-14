@@ -1,3 +1,8 @@
+/**
+ * already no use
+ * @iaiae 2017-07-14
+ */
+
 import Stream from '../../Functor/Stream.js'
 import Sink from '../../Functor/Sink/Sink'
 
