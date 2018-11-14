@@ -3,7 +3,7 @@ function Sink(fn, err){
     this.err = err || defaultErr;
 }
 function defaultErr(e){
-    console.error('depreciate!!!!!*****##### cannot go into the default err function in sink');
+    console.error('depreciate!! cannot go into the default err function in sink');
     return e;
 }
 Sink.of = function(fn, err){

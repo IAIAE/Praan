@@ -12,11 +12,11 @@ method(ClockTimer, 'now', Date.now)
     return delay <= 0 ? deferRun(fn) : setTimeout(fn, delay);
 })
 .method('clearTimer', function (timer){
-    return timer instanceof Ap ? timer.stop() : clearTimeout(timer);
+    return timer instanceof Application ? timer.stop() : clearTimeout(timer);
 })
 
 function deferRun(fn){
-    let ap = new Ap(fn);
+    let ap = new Application(fn);
 
     Promise.resolve(ap).then(function(_ap){
         try{
@@ -29,11 +29,12 @@ function deferRun(fn){
     return ap;
 }
 
-function Ap(fn){
+function Application(fn){
     this.fn = fn;
     this.active = true;
 }
-method(Ap, 'run', function(){
+
+method(Application, 'run', function(){
     this.active && this.fn()
 })
 .method('err', function(e){

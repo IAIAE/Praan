@@ -2,7 +2,7 @@ import Sink from '../Sink/Sink'
 
 const emptyFunc = function(){}
 const defaultErrFunc = function(e){
-    console.error('### depreciate #####, some error throwd and no handler catch it. the error drain to the bottom!!')
+    console.error('### depreciate, some error throwd and no handler catch it. the error drain to the bottom!!')
 }
 // Source.map(function(next, value, scheduler){
 //     value = ...
